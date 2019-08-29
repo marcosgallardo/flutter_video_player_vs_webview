@@ -1,6 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:video_player/video_player.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 void main() => runApp(MyApp());
 
@@ -20,7 +22,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  VideoPlayerController _controller;
+  WebViewController _controller;
+  bool _isPlaying = false;
 
   @override
   void initState() {
@@ -28,13 +31,15 @@ class _MyHomePageState extends State<MyHomePage> {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
     ]);
-    
+
     super.initState();
-    _controller = VideoPlayerController.network(
-        'https://d3n0q0ds2a28nv.cloudfront.net/1/480p_0.4mbps.mp4?Expires=1567171924&Signature=qNOoFuRhsF2Vy6a7BAS~NK11rU7fnLXnaSQ0wJgxiivYWduD2oRml41pOVA301gjSLXt0Pgp4IRHqxJTbovg89S8cxkpav257O-IqFMWMTO3H7sQrLDSIHb~jFnYBs7JADpCdp7EHAOnMtvBALNneVJwiaw645yfpyqWNEErpvSZnwkYZnA~eAqhyaIiiJNqkDFq3xIjlpboJq3fHkf9T1NugYTHRYWMGq3RB5Gj30NzQZUPHgHrHJ0ksEYE6Prn6OT1kFa0803D~C4eZTy5D75cdK7MxMfvAdL1lDonMzcv4E1oBsGClK86EDzc2ogp79XHif9iBTXgB9MXb27sJA__&Key-Pair-Id=APKAJBQQNFEQFM2O4YGQ')
-      ..initialize().then((_) {
-        setState(() {});
-      });
+  }
+
+  _loadHtmlFromAssets() async {
+    String fileText = await rootBundle.loadString('assets/video.html');
+    _controller.loadUrl(Uri.dataFromString(fileText,
+            mimeType: 'text/html', encoding: Encoding.getByName('utf-8'))
+        .toString());
   }
 
   @override
@@ -43,32 +48,33 @@ class _MyHomePageState extends State<MyHomePage> {
       title: 'Video Demo',
       home: Scaffold(
         body: Center(
-          child: _controller.value.initialized
-              ? AspectRatio(
-                  aspectRatio: _controller.value.aspectRatio,
-                  child: VideoPlayer(_controller),
-                )
-              : Container(),
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            setState(() {
-              _controller.value.isPlaying
-                  ? _controller.pause()
-                  : _controller.play();
-            });
-          },
-          child: Icon(
-            _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+          child: WebView(
+            initialUrl: '',
+            javascriptMode: JavascriptMode.unrestricted,
+            initialMediaPlaybackPolicy: AutoMediaPlaybackPolicy.always_allow,
+            onWebViewCreated: (WebViewController webViewController) {
+              setState(() {
+                _controller = webViewController;
+                _loadHtmlFromAssets();
+              });
+            },
           ),
         ),
+        floatingActionButton: _controller == null
+            ? null
+            : FloatingActionButton(
+                onPressed: () {
+                  _controller.evaluateJavascript(
+                      'video.' + (_isPlaying ? 'pause()' : 'play()'));
+                  setState(() {
+                    _isPlaying = !_isPlaying;
+                  });
+                },
+                child: Icon(
+                  _isPlaying ? Icons.pause : Icons.play_arrow,
+                ),
+              ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    _controller.dispose();
   }
 }
