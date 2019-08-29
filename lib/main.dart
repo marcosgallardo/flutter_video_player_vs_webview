@@ -31,7 +31,7 @@ class _MyHomePageState extends State<MyHomePage> {
     
     super.initState();
     _controller = VideoPlayerController.network(
-        'https://d3n0q0ds2a28nv.cloudfront.net/1/480p_0.4mbps.mp4?Expires=1567171924&Signature=qNOoFuRhsF2Vy6a7BAS~NK11rU7fnLXnaSQ0wJgxiivYWduD2oRml41pOVA301gjSLXt0Pgp4IRHqxJTbovg89S8cxkpav257O-IqFMWMTO3H7sQrLDSIHb~jFnYBs7JADpCdp7EHAOnMtvBALNneVJwiaw645yfpyqWNEErpvSZnwkYZnA~eAqhyaIiiJNqkDFq3xIjlpboJq3fHkf9T1NugYTHRYWMGq3RB5Gj30NzQZUPHgHrHJ0ksEYE6Prn6OT1kFa0803D~C4eZTy5D75cdK7MxMfvAdL1lDonMzcv4E1oBsGClK86EDzc2ogp79XHif9iBTXgB9MXb27sJA__&Key-Pair-Id=APKAJBQQNFEQFM2O4YGQ')
+        'https://archive.org/download/ElephantsDream/ed_1024_512kb.mp4')
       ..initialize().then((_) {
         setState(() {});
       });
@@ -56,6 +56,10 @@ class _MyHomePageState extends State<MyHomePage> {
               _controller.value.isPlaying
                   ? _controller.pause()
                   : _controller.play();
+              
+              if (!_controller.value.isPlaying) {
+                _controller.seekTo(Duration(seconds: 572));
+              }
             });
           },
           child: Icon(
